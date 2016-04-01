@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	RedisSettingsFile string = "./redis-settings.json"
+	RedisSettingsFile string = "./settings/redis-settings.json"
 )
 
 var (
