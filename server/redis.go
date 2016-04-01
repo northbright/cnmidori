@@ -2,17 +2,12 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"io/ioutil"
-	"path"
 	"time"
 )
 
 const (
-	// Redis Settings File.
-	RedisSettingsFile string = "./settings/redis-settings.json"
-
 	// Default Redis Pool Settings.
 	// For more information, see:
 	// http://godoc.org/github.com/garyburd/redigo/redis#Pool
@@ -46,22 +41,31 @@ type RedisSettings struct {
 	Servers []RedisNode `json:"servers"`
 }
 
-// LoadRedisSettings() loads Redis settings from file.
-func LoadRedisSettings() (s RedisSettings, err error) {
-	buf := []byte{}
+// LoadRedisSettings() loads Redis settings from []byte(JSON string).
+func LoadRedisSettings(buf []byte) (s RedisSettings, err error) {
 	s = RedisSettings{}
-
-	p := path.Join(Dirs["ServerRoot"], RedisSettingsFile)
-
-	if buf, err = ioutil.ReadFile(p); err != nil {
-		return s, err
-	}
-
 	if err = json.Unmarshal(buf, &s); err != nil {
 		return s, err
 	}
 
 	return s, nil
+}
+
+// LoadRedisSettingsFromStr() loads Redis settings from JSON string.
+func LoadRedisSettingsFromStr(str string) (s RedisSettings, err error) {
+	return LoadRedisSettings([]byte(str))
+}
+
+// LoadRedisSettingsFromFile() loads Redis settings from JSON file.
+func LoadRedisSettingsFromFile(file string) (s RedisSettings, err error) {
+	buf := []byte{}
+	s = RedisSettings{}
+
+	if buf, err = ioutil.ReadFile(file); err != nil {
+		return s, err
+	}
+
+	return LoadRedisSettings(buf)
 }
 
 // NewRedisPool() creates a new Redis pool which matains a pool of connections.
@@ -88,19 +92,14 @@ func NewRedisPool(addr, password string, maxIdle, maxActive, idleTimeoutSec int)
 	}
 }
 
-// Initialize Redis pools.
-func InitRedisPools() (err error) {
-	// Load Redis settings from file.
-	s, err := LoadRedisSettings()
-	if err != nil {
-		fmt.Printf("LoadRedisSettings() error: %v\n", err)
-		return err
-	}
+// CreateRedisPools() creates the Redis pools.
+func CreateRedisPools(settings RedisSettings) (pools map[string]*redis.Pool, err error) {
+	pools = map[string]*redis.Pool{}
 
 	// Create Redis Connection Pools
-	for _, v := range s.Servers {
-		RedisPools[v.Name] = NewRedisPool(v.Addr, v.Password, DefMaxIdle, DefMaxActive, DefIdleTimeoutSec)
+	for _, v := range settings.Servers {
+		pools[v.Name] = NewRedisPool(v.Addr, v.Password, DefMaxIdle, DefMaxActive, DefIdleTimeoutSec)
 	}
 
-	return nil
+	return pools, nil
 }
