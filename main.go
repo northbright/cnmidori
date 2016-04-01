@@ -6,10 +6,12 @@ import (
 )
 
 func main() {
+	var err error
 	fmt.Printf("ServerRoot: %v\n", server.ServerRoot)
-	s, err := server.LoadRedisSettings()
+
+	// Initialize Redis Pools
+	err = server.InitRedisPools()
 	if err != nil {
-		fmt.Printf("Load Redis Setings Error: %v\n", err)
+		fmt.Printf("InitRedisPools() error: %v\n", err)
 	}
-	fmt.Printf("Redis Settings: %v\n", s)
 }
