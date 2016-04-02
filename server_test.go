@@ -17,9 +17,7 @@ const (
         {"name":"user", "addr":"localhost:6379", "password":"123456"},
         {"name":"data", "addr":"localhost:6380", "password":"123456"}
     ]
-}
-
-    `
+}`
 )
 
 func ExampleNewServer() {
